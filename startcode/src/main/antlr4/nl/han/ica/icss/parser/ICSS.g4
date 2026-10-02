@@ -40,28 +40,43 @@ PLUS: '+';
 MIN: '-';
 MUL: '*';
 ASSIGNMENT_OPERATOR: ':=';
+EQUALS : '==';
+NOTEQUALS: '!=';
+SMALLER: '<';
+BIGGER: '>';
+EQUALSSMALLER: '<=';
+EQUALSBIGGER: '>=';
+AND: '&&';
+OR: '||';
 
 
+
+comparisonOperators: SMALLER|BIGGER|EQUALS|NOTEQUALS|EQUALSBIGGER|EQUALSSMALLER;
+logicalOperators: AND|OR;
 
 
 //--- PARSER: ---
 propertyValues: PIXELSIZE|COLOR|PERCENTAGE;
 operators:(PLUS|MIN|MUL);
+variableNames: LOWER_IDENT|CAPITAL_IDENT;
+statement: property | ifStatement;
+varValue: PIXELSIZE|COLOR|PERCENTAGE|TRUE|FALSE|SCALAR|variableNames;
+expression: (variableNames (comparisonOperators (varValue))?);
+condition: expression (logicalOperators|expression)*;
 
 
 value: (variableNames|propertyValues) (operators (SCALAR|variableNames|propertyValues))*;
-
 keyword: LOWER_IDENT COLON;
 property: keyword value SEMICOLON;
-element: OPEN_BRACE (property)* CLOSE_BRACE;
+element: OPEN_BRACE (statement)* CLOSE_BRACE;
 selector: simpleSelector+ element;
 simpleSelector : LOWER_IDENT| ID_IDENT | CLASS_IDENT;
 
-varValue: PIXELSIZE|COLOR|PERCENTAGE|TRUE|FALSE;
-
-variableNames: LOWER_IDENT|CAPITAL_IDENT;
 
 var: variableNames ASSIGNMENT_OPERATOR varValue SEMICOLON;
 
-stylesheet: var* selector* EOF;
+ifStatement: IF BOX_BRACKET_OPEN condition BOX_BRACKET_CLOSE OPEN_BRACE statement* CLOSE_BRACE
+             (ELSE OPEN_BRACE statement* CLOSE_BRACE)? ;
+
+stylesheet: (var|selector)* EOF;
 
