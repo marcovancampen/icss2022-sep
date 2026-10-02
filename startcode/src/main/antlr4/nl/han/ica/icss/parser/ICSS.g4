@@ -59,7 +59,7 @@ logicalOperators: AND|OR;
 propertyValues: PIXELSIZE|COLOR|PERCENTAGE;
 operators:(PLUS|MIN|MUL);
 variableNames: LOWER_IDENT|CAPITAL_IDENT;
-statement: property | ifStatement;
+statement: property | ifStatement | var;
 varValue: PIXELSIZE|COLOR|PERCENTAGE|TRUE|FALSE|SCALAR|variableNames;
 expression: (variableNames (comparisonOperators (varValue))?);
 condition: expression (logicalOperators|expression)*;
