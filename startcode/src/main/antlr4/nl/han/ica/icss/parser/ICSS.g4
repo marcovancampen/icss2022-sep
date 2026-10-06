@@ -65,7 +65,7 @@ expression: (variableNames (comparisonOperators (varValue))?);
 condition: expression (logicalOperators|expression)*;
 
 
-value: (variableNames|propertyValues) (operators (SCALAR|variableNames|propertyValues))*;
+value: ((variableNames|propertyValues) (operators (SCALAR|variableNames|propertyValues))*)*;
 keyword: LOWER_IDENT COLON;
 property: keyword value SEMICOLON;
 element: OPEN_BRACE (statement)* CLOSE_BRACE;
