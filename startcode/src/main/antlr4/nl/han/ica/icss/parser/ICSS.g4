@@ -57,26 +57,32 @@ logicalOperators: AND|OR;
 
 //--- PARSER: ---
 propertyValues: PIXELSIZE|COLOR|PERCENTAGE;
-operators:(PLUS|MIN|MUL);
+operators1:(MUL);
+operators2:(PLUS|MIN);
 variableNames: LOWER_IDENT|CAPITAL_IDENT;
 statement: property | ifStatement | var;
 varValue: PIXELSIZE|COLOR|PERCENTAGE|TRUE|FALSE|SCALAR|variableNames;
 expression: (variableNames (comparisonOperators (varValue))?);
 condition: expression (logicalOperators|expression)*;
 
+calculation: calculation operators1 calculation | calculation operators2 calculation| (propertyValues|SCALAR|variableNames);
 
-value: ((variableNames|propertyValues) (operators (SCALAR|variableNames|propertyValues))*)*;
+value: (calculation)*;
 keyword: LOWER_IDENT COLON;
 property: keyword value SEMICOLON;
 element: OPEN_BRACE (statement)* CLOSE_BRACE;
 selector: simpleSelector+ element;
 simpleSelector : LOWER_IDENT| ID_IDENT | CLASS_IDENT;
 
+ifCondition: BOX_BRACKET_OPEN condition BOX_BRACKET_CLOSE;
+ifBlock:OPEN_BRACE statement* CLOSE_BRACE;
+elseBlock: ELSE OPEN_BRACE statement* CLOSE_BRACE;
+
 
 var: variableNames ASSIGNMENT_OPERATOR varValue SEMICOLON;
 
-ifStatement: IF BOX_BRACKET_OPEN condition BOX_BRACKET_CLOSE OPEN_BRACE statement* CLOSE_BRACE
-             (ELSE OPEN_BRACE statement* CLOSE_BRACE)? ;
+ifStatement: IF ifCondition ifBlock
+             (elseBlock)?;
 
 stylesheet: (var|selector)* EOF;
 
