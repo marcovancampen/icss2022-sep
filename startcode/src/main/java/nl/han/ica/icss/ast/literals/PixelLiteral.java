@@ -15,7 +15,7 @@ public class PixelLiteral extends Literal {
     }
     @Override
     public String getNodeLabel() {
-        return "Pixel literal (" + value + ")";
+        return "Pixel literal (" + value + "px)";
     }
 
     @Override

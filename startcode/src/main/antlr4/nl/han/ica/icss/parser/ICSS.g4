@@ -55,34 +55,50 @@ comparisonOperators: SMALLER|BIGGER|EQUALS|NOTEQUALS|EQUALSBIGGER|EQUALSSMALLER;
 logicalOperators: AND|OR;
 
 
-//--- PARSER: ---
-propertyValues: PIXELSIZE|COLOR|PERCENTAGE;
-operators1:(MUL);
-operators2:(PLUS|MIN);
-variableNames: LOWER_IDENT|CAPITAL_IDENT;
-statement: property | ifStatement | var;
-varValue: PIXELSIZE|COLOR|PERCENTAGE|TRUE|FALSE|SCALAR|variableNames;
-expression: (variableNames (comparisonOperators (varValue))?);
+//--- PARSER: ---;
+operators1:MUL #multiplyOperation;
+operators2:PLUS #addOperation
+|MIN #subtractOperation ;
+
+varValue: literals
+| boolLiteral
+| scalarLiteral;
+scalarLiteral: SCALAR;
+boolLiteral: TRUE|FALSE;
+
+expression: (LOWER_IDENT|CAPITAL_IDENT(comparisonOperators (varValue))?);
 condition: expression (logicalOperators|expression)*;
 
-calculation: calculation operators1 calculation | calculation operators2 calculation| (propertyValues|SCALAR|variableNames);
+calculation: calculation operators1 calculation | calculation operators2 calculation| (literals|variableReference|scalarLiteral);
+//
+value: (operators1|operators2);
 
-value: (calculation)*;
-keyword: LOWER_IDENT COLON;
-property: keyword value SEMICOLON;
-element: OPEN_BRACE (statement)* CLOSE_BRACE;
-selector: simpleSelector+ element;
-simpleSelector : LOWER_IDENT| ID_IDENT | CLASS_IDENT;
+propertyName: LOWER_IDENT;
+
+literals: PIXELSIZE #pixelLiteral
+| COLOR #colorLiteral
+| PERCENTAGE #percentageLiteral
+;
+
+
+property: propertyName COLON (value) SEMICOLON;
+declaration: (property | ifStatement)* ;
+stylerule: selector+ OPEN_BRACE declaration CLOSE_BRACE;
+selector: LOWER_IDENT #tagSelector
+| ID_IDENT #idSelector
+| CLASS_IDENT #classSelector;
 
 ifCondition: BOX_BRACKET_OPEN condition BOX_BRACKET_CLOSE;
-ifBlock:OPEN_BRACE statement* CLOSE_BRACE;
-elseBlock: ELSE OPEN_BRACE statement* CLOSE_BRACE;
+ifBlock:OPEN_BRACE (property | ifStatement)* CLOSE_BRACE;
+elseBlock: ELSE OPEN_BRACE (property | ifStatement)* CLOSE_BRACE;
+
+variableReference: CAPITAL_IDENT;
 
 
-var: variableNames ASSIGNMENT_OPERATOR varValue SEMICOLON;
+variableAssignment: variableReference ASSIGNMENT_OPERATOR varValue SEMICOLON ;
 
 ifStatement: IF ifCondition ifBlock
              (elseBlock)?;
 
-stylesheet: (var|selector)* EOF;
+stylesheet: (variableAssignment|stylerule)* EOF;
 

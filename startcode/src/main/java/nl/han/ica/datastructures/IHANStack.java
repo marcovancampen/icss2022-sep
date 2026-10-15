@@ -1,5 +1,7 @@
 package nl.han.ica.datastructures;
 
+import java.util.List;
+
 public interface IHANStack<T> {
     /**
      * pushes value T to the top of the stack
