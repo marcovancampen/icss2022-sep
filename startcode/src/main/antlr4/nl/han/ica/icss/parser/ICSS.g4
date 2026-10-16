@@ -71,7 +71,7 @@ condition: expression (logicalOperators|expression)*;
 
 calculation: calculation operators1 calculation | calculation operators2 calculation| (literals|variableReference|scalarLiteral);
 //
-value: (operators1|operators2);
+value: calculation;
 
 propertyName: LOWER_IDENT;
 
