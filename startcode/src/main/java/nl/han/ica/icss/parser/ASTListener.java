@@ -15,7 +15,6 @@ import nl.han.ica.icss.ast.operations.SubtractOperation;
 import nl.han.ica.icss.ast.selectors.ClassSelector;
 import nl.han.ica.icss.ast.selectors.IdSelector;
 import nl.han.ica.icss.ast.selectors.TagSelector;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 /**
  * This class extracts the ICSS Abstract Syntax Tree from the Antlr Parse tree.
@@ -36,54 +35,29 @@ public class ASTListener extends ICSSBaseListener {
 		return ast;
     }
 
-	private boolean isInsideCalculation(ParseTree ctx) {
-		ParseTree parent = ctx.getParent();
-		while (parent != null) {
-			if (parent instanceof ICSSParser.CalculationContext) {
-				return true;
-			}
-			parent = parent.getParent();
-		}
-		return false;
-	}
-
-	private Expression buildCalculation(ICSSParser.CalculationContext ctx) {
-		if (ctx.calculation().size() == 2) {
-			Operation operation;
-			if (ctx.operators1() != null) {
-				operation = new MultiplyOperation();
-			} else if (ctx.operators2().getText().equals("+")) {
-				operation = new AddOperation();
-			} else {
-				operation = new SubtractOperation();
-			}
-			operation.addChild(buildCalculation(ctx.calculation(0)));
-			operation.addChild(buildCalculation(ctx.calculation(1)));
-			return operation;
-		}
-
-		if (ctx.variableReference() != null) {
-			return new VariableReference(ctx.variableReference().getText());
-		}
-		if (ctx.scalarLiteral() != null) {
-			return new ScalarLiteral(ctx.scalarLiteral().getText());
-		}
-
-		String literal = ctx.literals().getText();
-		if (literal.endsWith("px")) {
-			return new PixelLiteral(literal);
-		}
-		if (literal.endsWith("%")) {
-			return new PercentageLiteral(literal);
-		}
-		return new ColorLiteral(literal);
+	@Override
+	public void enterMultiplyCalculation(ICSSParser.MultiplyCalculationContext ctx) {
+		currentContainer.push(new MultiplyOperation());
 	}
 
 	@Override
-	public void exitCalculation(ICSSParser.CalculationContext ctx) {
-		if (ctx.getParent() instanceof ICSSParser.ValueContext) {
-			currentContainer.peek().addChild(buildCalculation(ctx));
-		}
+	public void exitMultiplyCalculation(ICSSParser.MultiplyCalculationContext ctx) {
+		MultiplyOperation operation = (MultiplyOperation) currentContainer.pop();
+		currentContainer.peek().addChild(operation);
+	}
+
+	@Override
+	public void enterAddSubtractCalculation(ICSSParser.AddSubtractCalculationContext ctx) {
+		Operation operation = ctx.operators2().getText().equals("+")
+				? new AddOperation()
+				: new SubtractOperation();
+		currentContainer.push(operation);
+	}
+
+	@Override
+	public void exitAddSubtractCalculation(ICSSParser.AddSubtractCalculationContext ctx) {
+		Operation operation = (Operation) currentContainer.pop();
+		currentContainer.peek().addChild(operation);
 	}
 
 	@Override
@@ -113,18 +87,12 @@ public class ASTListener extends ICSSBaseListener {
 
 	@Override
 	public void enterVariableReference(ICSSParser.VariableReferenceContext ctx) {
-		if (isInsideCalculation(ctx)) {
-			return;
-		}
 		ASTNode VariableRefrence = new VariableReference(ctx.getText());
 		currentContainer.push(VariableRefrence);
 	}
 
 	@Override
 	public void exitVariableReference(ICSSParser.VariableReferenceContext ctx) {
-		if (isInsideCalculation(ctx)) {
-			return;
-		}
 		VariableReference variableReference = (VariableReference) currentContainer.pop();
 		currentContainer.peek().addChild(variableReference);
 	}
@@ -203,35 +171,23 @@ public class ASTListener extends ICSSBaseListener {
 
 	@Override
 	public void enterPixelLiteral(ICSSParser.PixelLiteralContext ctx) {
-		if (isInsideCalculation(ctx)) {
-			return;
-		}
 		ASTNode pixelLiteral = new PixelLiteral(ctx.getText());
 		currentContainer.push(pixelLiteral);
 	}
 	@Override
 	public void exitPixelLiteral(ICSSParser.PixelLiteralContext ctx) {
-		if (isInsideCalculation(ctx)) {
-			return;
-		}
 		PixelLiteral pixelLiteral = (PixelLiteral) currentContainer.pop();
 		currentContainer.peek().addChild(pixelLiteral);
 	}
 
 	@Override
 	public void enterColorLiteral(ICSSParser.ColorLiteralContext ctx) {
-		if (isInsideCalculation(ctx)) {
-			return;
-		}
 		ASTNode colorLiteral = new ColorLiteral(ctx.getText());
 		currentContainer.push(colorLiteral);
 	}
 
 	@Override
 	public void exitColorLiteral(ICSSParser.ColorLiteralContext ctx) {
-		if (isInsideCalculation(ctx)) {
-			return;
-		}
 		ASTNode colorLiteral = (ASTNode) currentContainer.pop();
 		currentContainer.peek().addChild(colorLiteral);
 	}
@@ -250,35 +206,23 @@ public class ASTListener extends ICSSBaseListener {
 
 	@Override
 	public void enterPercentageLiteral(ICSSParser.PercentageLiteralContext ctx) {
-		if (isInsideCalculation(ctx)) {
-			return;
-		}
 		ASTNode percentageLiteral = new PercentageLiteral(ctx.getText());
 		currentContainer.push(percentageLiteral);
 	}
 	@Override
 	public void exitPercentageLiteral(ICSSParser.PercentageLiteralContext ctx) {
-		if (isInsideCalculation(ctx)) {
-			return;
-		}
 		PercentageLiteral percentageLiteral = (PercentageLiteral) currentContainer.pop();
 		currentContainer.peek().addChild(percentageLiteral);
 	}
 
 	@Override
 	public void enterScalarLiteral(ICSSParser.ScalarLiteralContext ctx) {
-		if (isInsideCalculation(ctx)) {
-			return;
-		}
 		ASTNode  scalarLiteral = new ScalarLiteral(ctx.getText());
 		currentContainer.push(scalarLiteral);
 	}
 
 	@Override
 	public void exitScalarLiteral(ICSSParser.ScalarLiteralContext ctx) {
-		if (isInsideCalculation(ctx)) {
-			return;
-		}
 		ScalarLiteral scalarLiteral = (ScalarLiteral) currentContainer.pop();
 		currentContainer.peek().addChild(scalarLiteral);
 	}

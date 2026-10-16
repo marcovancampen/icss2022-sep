@@ -69,7 +69,11 @@ boolLiteral: TRUE|FALSE;
 expression: (LOWER_IDENT|CAPITAL_IDENT(comparisonOperators (varValue))?);
 condition: expression (logicalOperators|expression)*;
 
-calculation: calculation operators1 calculation | calculation operators2 calculation| (literals|variableReference|scalarLiteral);
+calculation: calculation operators1 calculation #multiplyCalculation
+| calculation operators2 calculation #addSubtractCalculation
+| literals #literalCalculation
+| variableReference #variableCalculation
+| scalarLiteral #scalarCalculation;
 //
 value: calculation;
 
