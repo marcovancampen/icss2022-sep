@@ -67,8 +67,6 @@ scalarLiteral: SCALAR;
 boolLiteral: TRUE|FALSE;
 
 expression: (LOWER_IDENT|CAPITAL_IDENT(comparisonOperators (varValue))?);
-condition: expression (logicalOperators|expression)*;
-
 calculation: calculation operators1 calculation #multiplyCalculation
 | calculation operators2 calculation #addSubtractCalculation
 | literals #literalCalculation
@@ -86,15 +84,15 @@ literals: PIXELSIZE #pixelLiteral
 
 
 property: propertyName COLON (value) SEMICOLON;
-declaration: (property | ifStatement)* ;
-stylerule: selector+ OPEN_BRACE declaration CLOSE_BRACE;
+declaration: property;
+stylerule: selector+ OPEN_BRACE (declaration|ifStatement)* CLOSE_BRACE;
 selector: LOWER_IDENT #tagSelector
 | ID_IDENT #idSelector
 | CLASS_IDENT #classSelector;
 
-ifCondition: BOX_BRACKET_OPEN condition BOX_BRACKET_CLOSE;
-ifBlock:OPEN_BRACE (property | ifStatement)* CLOSE_BRACE;
-elseBlock: ELSE OPEN_BRACE (property | ifStatement)* CLOSE_BRACE;
+ifCondition: BOX_BRACKET_OPEN variableReference BOX_BRACKET_CLOSE;
+ifBlock:OPEN_BRACE (declaration | ifStatement)* CLOSE_BRACE;
+elseBlock: ELSE OPEN_BRACE (declaration | ifStatement)* CLOSE_BRACE;
 
 variableReference: CAPITAL_IDENT;
 

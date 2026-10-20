@@ -1,5 +1,6 @@
 package nl.han.ica.icss.parser;
 
+import java.util.ArrayList;
 import java.util.Stack;
 
 
@@ -144,6 +145,30 @@ public class ASTListener extends ICSSBaseListener {
 	public void exitTagSelector(ICSSParser.TagSelectorContext ctx) {
 		ASTNode tagSelector = (ASTNode) currentContainer.pop();
 		currentContainer.peek().addChild(tagSelector);
+	}
+
+	@Override
+	public void enterIfCondition(ICSSParser.IfConditionContext ctx) {
+		ASTNode ifClause = new IfClause(new VariableReference("temporary set"), new ArrayList<>());
+		currentContainer.push(ifClause);
+	}
+
+	@Override
+	public void exitIfBlock(ICSSParser.IfBlockContext ctx) {
+		IfClause ifBlock = (IfClause) currentContainer.pop();
+		currentContainer.peek().addChild(ifBlock);
+	}
+
+	@Override
+	public void enterElseBlock(ICSSParser.ElseBlockContext ctx) {
+		ASTNode ElseClause = new ElseClause();
+		currentContainer.push(ElseClause);
+	}
+
+	@Override
+	public void exitElseBlock(ICSSParser.ElseBlockContext ctx) {
+		ElseClause elseClause = (ElseClause) currentContainer.pop();
+		currentContainer.peek().addChild(elseClause);
 	}
 
 	@Override
