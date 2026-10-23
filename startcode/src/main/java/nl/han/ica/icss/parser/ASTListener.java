@@ -154,7 +154,7 @@ public class ASTListener extends ICSSBaseListener {
 	}
 
 	@Override
-	public void exitIfBlock(ICSSParser.IfBlockContext ctx) {
+	public void exitIfElseBlock(ICSSParser.IfElseBlockContext ctx) {
 		IfClause ifBlock = (IfClause) currentContainer.pop();
 		currentContainer.peek().addChild(ifBlock);
 	}

@@ -90,8 +90,9 @@ selector: LOWER_IDENT #tagSelector
 | ID_IDENT #idSelector
 | CLASS_IDENT #classSelector;
 
-ifCondition: BOX_BRACKET_OPEN variableReference BOX_BRACKET_CLOSE;
-ifBlock:OPEN_BRACE (declaration | ifStatement)* CLOSE_BRACE;
+ifCondition: BOX_BRACKET_OPEN (variableReference|boolLiteral) BOX_BRACKET_CLOSE;
+ifElseBlock:OPEN_BRACE (declaration | ifStatement)* CLOSE_BRACE
+             (elseBlock)?;
 elseBlock: ELSE OPEN_BRACE (declaration | ifStatement)* CLOSE_BRACE;
 
 variableReference: CAPITAL_IDENT;
@@ -99,8 +100,7 @@ variableReference: CAPITAL_IDENT;
 
 variableAssignment: variableReference ASSIGNMENT_OPERATOR varValue SEMICOLON ;
 
-ifStatement: IF ifCondition ifBlock
-             (elseBlock)?;
+ifStatement: IF ifCondition ifElseBlock;
 
 stylesheet: (variableAssignment|stylerule)* EOF;
 

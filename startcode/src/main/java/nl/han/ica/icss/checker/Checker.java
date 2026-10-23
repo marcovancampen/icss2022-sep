@@ -2,6 +2,7 @@ package nl.han.ica.icss.checker;
 
 import nl.han.ica.datastructures.IHANLinkedList;
 import nl.han.ica.icss.ast.*;
+import nl.han.ica.icss.ast.literals.BoolLiteral;
 import nl.han.ica.icss.ast.literals.ColorLiteral;
 import nl.han.ica.icss.ast.literals.PixelLiteral;
 import nl.han.ica.icss.ast.literals.ScalarLiteral;
@@ -34,8 +35,6 @@ public class Checker {
             if (child instanceof Stylerule){
                 checkStyleRule((Stylerule) child);
             }
-
-
         }
 
     }
@@ -51,13 +50,42 @@ public class Checker {
 
     private void checkVariableReference(VariableReference Variable) {
         if(!VariableReferences.containsKey(Variable)) {
-            Variable.setError("Variable" + Variable.getNodeLabel() + " has not been initialized");
+            Variable.setError(Variable.getNodeLabel() + " has not been initialized");
         }
     }
 
     private void checkStyleRule(Stylerule stylerule) {
         for (ASTNode child : stylerule.getChildren()){
             if (child instanceof Declaration){
+                checkDeclaration((Declaration) child);
+            }
+            if(child instanceof IfClause){
+                checkIfClause((IfClause) child);
+            }
+        }
+    }
+    private void checkIfClause(IfClause ifClause) {
+        if(getLiteral(ifClause.conditionalExpression).getClass() != BoolLiteral.class){
+            ifClause.setError(ifClause.conditionalExpression.getNodeLabel() + " is not a boolean literal");
+            return;
+        }
+        if(ifClause.conditionalExpression.getClass() == VariableReference.class){
+            checkVariableReference((VariableReference) ifClause.conditionalExpression);
+        }
+        CheckIfElseClause(ifClause.body);
+        if(ifClause.elseClause != null){
+            CheckIfElseClause(ifClause.elseClause.body);
+        }
+
+    }
+
+
+    private void CheckIfElseClause(ArrayList<ASTNode> body) {
+        for(ASTNode child: body){
+            if(child instanceof IfClause){
+                checkIfClause((IfClause) child);
+            }
+            if(child instanceof Declaration){
                 checkDeclaration((Declaration) child);
             }
         }
