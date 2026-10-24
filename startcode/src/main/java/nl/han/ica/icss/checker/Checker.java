@@ -12,13 +12,12 @@ import nl.han.ica.icss.ast.types.ExpressionType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 
 public class Checker {
 
     private IHANLinkedList<HashMap<String, ExpressionType>> variableTypes;
-    private HashMap<VariableReference, Literal> VariableReferences;
+    private HashMap<VariableReference, ArrayList<ASTNode>> VariableReferences;
 
     public void check(AST ast) {
         // variableTypes = new HANLinkedList<>();
@@ -30,7 +29,7 @@ public class Checker {
     private void checkStyleSheet(Stylesheet root) {
         for (ASTNode child : root.getChildren()){
             if(child instanceof VariableAssignment){
-                checkVariableAssignment((VariableAssignment) child);
+                checkVariableAssignment((VariableAssignment) child, root);
             }
             if (child instanceof Stylerule){
                 checkStyleRule((Stylerule) child);
@@ -39,19 +38,43 @@ public class Checker {
 
     }
 
-    private void checkVariableAssignment(VariableAssignment variableAssignment) {
+    private void checkVariableAssignment(VariableAssignment variableAssignment, ASTNode Parent) {
         if(variableAssignment.expression == null){
             variableAssignment.setError("VariableAssignment" + variableAssignment.getNodeLabel() + " has no value");
 
         }else{
-            VariableReferences.put(variableAssignment.name, (Literal) variableAssignment.expression);
+            ArrayList<ASTNode> Values = new ArrayList<>();
+            Values.add((Literal) variableAssignment.expression);
+            Values.add(Parent);
+            VariableReferences.put(variableAssignment.name, Values);
         }
     }
 
-    private void checkVariableReference(VariableReference Variable) {
+    private void checkVariableReference(VariableReference Variable, ASTNode Parent) {
         if(!VariableReferences.containsKey(Variable)) {
             Variable.setError(Variable.getNodeLabel() + " has not been initialized");
+            return;
         }
+        if(!checkScopeVariable(Variable, Parent)){
+            Variable.setError(Variable.getNodeLabel() + " is not in scope");
+        }
+    }
+    private boolean containsNode(ASTNode scope, ASTNode target) {
+        if (scope == target) {
+            return true;
+        }
+        for (ASTNode child : scope.getChildren()) {
+            if (containsNode(child, target)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkScopeVariable(VariableReference variable, ASTNode parent) {
+        ASTNode declarationScope = VariableReferences.get(variable).get(1);
+        return containsNode(declarationScope, parent);
+
     }
 
     private void checkStyleRule(Stylerule stylerule) {
@@ -65,12 +88,16 @@ public class Checker {
         }
     }
     private void checkIfClause(IfClause ifClause) {
-        if(getLiteral(ifClause.conditionalExpression).getClass() != BoolLiteral.class){
-            ifClause.setError(ifClause.conditionalExpression.getNodeLabel() + " is not a boolean literal");
+        if (ifClause.conditionalExpression instanceof VariableReference) {
+            checkVariableReference((VariableReference) ifClause.conditionalExpression, ifClause);
+        }
+        Literal condition = getLiteral(ifClause.conditionalExpression);
+        if (condition == null) {
             return;
         }
-        if(ifClause.conditionalExpression.getClass() == VariableReference.class){
-            checkVariableReference((VariableReference) ifClause.conditionalExpression);
+        if(condition.getClass() != BoolLiteral.class){
+            ifClause.setError(ifClause.conditionalExpression.getNodeLabel() + " is not a boolean literal");
+            return;
         }
         CheckIfElseClause(ifClause.body);
         if(ifClause.elseClause != null){
@@ -92,10 +119,15 @@ public class Checker {
     }
 
     private void checkAddOperation(AddOperation addOperation) {
-        if(getLiteral(addOperation.lhs).getClass() != getLiteral(addOperation.rhs).getClass()){
-            addOperation.setError(getLiteral(addOperation.lhs).getClass().getSimpleName() + " Is not the same type as " + getLiteral(addOperation.rhs).getClass().getSimpleName());
+        Literal left = getLiteral(addOperation.lhs);
+        Literal right = getLiteral(addOperation.rhs);
+        if (left == null || right == null) {
+            return;
         }
-        if (getLiteral(addOperation.lhs).getClass() == ColorLiteral.class || getLiteral(addOperation.rhs).getClass() == ColorLiteral.class) {
+        if(left.getClass() != right.getClass()){
+            addOperation.setError(left.getClass().getSimpleName() + " Is not the same type as " + right.getClass().getSimpleName());
+        }
+        if (left.getClass() == ColorLiteral.class || right.getClass() == ColorLiteral.class) {
             addOperation.setError("ColorLiteral is not allowed to be used in Calculation");
         }
     }
@@ -111,7 +143,12 @@ public class Checker {
         Multiplyoperation.setError("Multiply operation does not contain a ScalarLiteral");
     }
     private Literal getVariableExpression(Expression expression) {
-        return VariableReferences.get(expression);
+        ArrayList node  = VariableReferences.get(expression);
+        if (node == null){
+            expression.setError("Variable " + expression.getNodeLabel() + " has not been initialized or is not inside scope");
+            return null;
+        }
+        return (Literal) node.get(0);
     }
 
     private void checkOperation(Operation operation) {
@@ -142,19 +179,23 @@ public class Checker {
 
     private void checkDeclaration(Declaration Declaration) {
         if (Declaration.expression.getClass() == VariableReference.class){
-            checkVariableReference((VariableReference) Declaration.expression);
+            checkVariableReference((VariableReference) Declaration.expression, Declaration);
         }
         if(Declaration.expression instanceof Operation){
             checkOperation((Operation) Declaration.expression);
         }
-        if(Declaration.property.name.equalsIgnoreCase("width") &&  getLiteral(Declaration.expression).getClass() != PixelLiteral.class) {
-            Declaration.setError("Property 'width' does not allow type of: " + getLiteral(Declaration.expression).getClass().getSimpleName());
+        Literal literal = getLiteral(Declaration.expression);
+        if (literal == null) {
+            return;
         }
-        if (Declaration.property.name.equalsIgnoreCase("background-color") && getLiteral(Declaration.expression).getClass() != ColorLiteral.class) {
-            Declaration.setError("Property 'background-color' does not allow type of: " + getLiteral(Declaration.expression).getClass().getSimpleName());
+        if(Declaration.property.name.equalsIgnoreCase("width") && literal.getClass() != PixelLiteral.class) {
+            Declaration.setError("Property 'width' does not allow type of: " + literal.getClass().getSimpleName());
         }
-        if (Declaration.property.name.equalsIgnoreCase("color") && getLiteral(Declaration.expression).getClass() != ColorLiteral.class) {
-            Declaration.setError("Property 'color' does not allow type of: " + getLiteral(Declaration.expression).getClass().getSimpleName());
+        if (Declaration.property.name.equalsIgnoreCase("background-color") && literal.getClass() != ColorLiteral.class) {
+            Declaration.setError("Property 'background-color' does not allow type of: " + literal.getClass().getSimpleName());
+        }
+        if (Declaration.property.name.equalsIgnoreCase("color") && literal.getClass() != ColorLiteral.class) {
+            Declaration.setError("Property 'color' does not allow type of: " + literal.getClass().getSimpleName());
         }
 
     }
