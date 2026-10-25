@@ -41,8 +41,15 @@ public class Checker {
             variableAssignment.setError("VariableAssignment" + variableAssignment.getNodeLabel() + " has no value");
 
         }else{
+            checkExpressionReferences(variableAssignment.expression, variableAssignment);
             ArrayList<ASTNode> Values = new ArrayList<>();
-            Values.add((Literal) variableAssignment.expression);
+            if(variableAssignment.expression instanceof VariableReference){
+                VariableReference variableReference = (VariableReference) variableAssignment.expression;
+                Values.add(variableReference);
+
+            }else{
+                Values.add((Literal) variableAssignment.expression);
+            }
             Values.add(Parent);
             VariableReferences.put(variableAssignment.name, Values);
         }
@@ -75,8 +82,24 @@ public class Checker {
 
     }
 
+    private void checkExpressionReferences(Expression expression, ASTNode parent) {
+        if (expression instanceof VariableReference) {
+            checkVariableReference((VariableReference) expression, parent);
+            return;
+        }
+        for (ASTNode child : expression.getChildren()) {
+            if (child instanceof Expression) {
+                checkExpressionReferences((Expression) child, parent);
+            }
+        }
+    }
+
     private void checkStyleRule(Stylerule stylerule) {
-        for (ASTNode child : stylerule.getChildren()){
+        HashMap<VariableReference, ArrayList<ASTNode>> outerReferences = new HashMap<>(VariableReferences);
+        for (ASTNode child : stylerule.body){
+            if (child instanceof VariableAssignment) {
+                checkVariableAssignment((VariableAssignment) child, stylerule);
+            }
             if (child instanceof Declaration){
                 checkDeclaration((Declaration) child);
             }
@@ -84,29 +107,28 @@ public class Checker {
                 checkIfClause((IfClause) child);
             }
         }
+        VariableReferences = outerReferences;
     }
     private void checkIfClause(IfClause ifClause) {
-        if (ifClause.conditionalExpression instanceof VariableReference) {
-            checkVariableReference((VariableReference) ifClause.conditionalExpression, ifClause);
-        }
+        checkExpressionReferences(ifClause.conditionalExpression, ifClause);
         Literal condition = getLiteral(ifClause.conditionalExpression);
-        if (condition == null) {
-            return;
-        }
-        if(condition.getClass() != BoolLiteral.class){
+        if(condition != null && condition.getClass() != BoolLiteral.class){
             ifClause.setError(ifClause.conditionalExpression.getNodeLabel() + " is not a boolean literal");
-            return;
         }
-        CheckIfElseClause(ifClause.body);
+        CheckIfElseClause(ifClause.body, ifClause);
         if(ifClause.elseClause != null){
-            CheckIfElseClause(ifClause.elseClause.body);
+            CheckIfElseClause(ifClause.elseClause.body, ifClause.elseClause);
         }
 
     }
 
 
-    private void CheckIfElseClause(ArrayList<ASTNode> body) {
+    private void CheckIfElseClause(ArrayList<ASTNode> body, ASTNode scope) {
+        HashMap<VariableReference, ArrayList<ASTNode>> outerReferences = new HashMap<>(VariableReferences);
         for(ASTNode child: body){
+            if(child instanceof VariableAssignment){
+                checkVariableAssignment((VariableAssignment) child, scope);
+            }
             if(child instanceof IfClause){
                 checkIfClause((IfClause) child);
             }
@@ -114,6 +136,7 @@ public class Checker {
                 checkDeclaration((Declaration) child);
             }
         }
+        VariableReferences = outerReferences;
     }
 
     private void checkAddOperation(AddOperation addOperation) {
@@ -161,6 +184,9 @@ public class Checker {
             expression.setError("Variable " + expression.getNodeLabel() + " has not been initialized or is not inside scope");
             return null;
         }
+        if(node.get(0) instanceof VariableReference){
+            return getVariableExpression((Expression) node.get(0));
+        }
         return (Literal) node.get(0);
     }
 
@@ -194,9 +220,7 @@ public class Checker {
 
 
     private void checkDeclaration(Declaration Declaration) {
-        if (Declaration.expression.getClass() == VariableReference.class){
-            checkVariableReference((VariableReference) Declaration.expression, Declaration);
-        }
+        checkExpressionReferences(Declaration.expression, Declaration);
         if(Declaration.expression instanceof Operation){
             checkOperation((Operation) Declaration.expression);
         }

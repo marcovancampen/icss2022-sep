@@ -62,7 +62,8 @@ operators2:PLUS #addOperation
 
 varValue: literals
 | boolLiteral
-| scalarLiteral;
+| scalarLiteral
+| variableReference;
 scalarLiteral: SCALAR;
 boolLiteral: TRUE|FALSE;
 
