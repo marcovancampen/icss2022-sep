@@ -45,6 +45,10 @@ public class Checker {
             ArrayList<ASTNode> Values = new ArrayList<>();
             if(variableAssignment.expression instanceof VariableReference){
                 VariableReference variableReference = (VariableReference) variableAssignment.expression;
+                if (variableReference.equals(variableAssignment.name)) {
+                    variableAssignment.setError("A variable cannot refer to itself");
+                    return;
+                }
                 Values.add(variableReference);
 
             }else{

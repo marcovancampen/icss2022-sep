@@ -86,7 +86,7 @@ literals: PIXELSIZE #pixelLiteral
 
 property: propertyName COLON (value) SEMICOLON;
 declaration: property;
-stylerule: selector+ OPEN_BRACE (declaration|ifStatement|variableAssignment)* CLOSE_BRACE;
+stylerule: selector OPEN_BRACE (declaration|ifStatement|variableAssignment)* CLOSE_BRACE;
 selector: LOWER_IDENT #tagSelector
 | ID_IDENT #idSelector
 | CLASS_IDENT #classSelector;
