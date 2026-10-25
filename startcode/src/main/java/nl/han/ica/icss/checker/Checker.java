@@ -8,6 +8,7 @@ import nl.han.ica.icss.ast.literals.PixelLiteral;
 import nl.han.ica.icss.ast.literals.ScalarLiteral;
 import nl.han.ica.icss.ast.operations.AddOperation;
 import nl.han.ica.icss.ast.operations.MultiplyOperation;
+import nl.han.ica.icss.ast.operations.SubtractOperation;
 import nl.han.ica.icss.ast.types.ExpressionType;
 
 import java.util.ArrayList;
@@ -142,6 +143,21 @@ public class Checker {
         }
         Multiplyoperation.setError("Multiply operation does not contain a ScalarLiteral");
     }
+
+    private void checkSubtractOperation(SubtractOperation subtractOperation) {
+        Literal left = getLiteral(subtractOperation.lhs);
+        Literal right = getLiteral(subtractOperation.rhs);
+        if (left == null || right == null) {
+            return;
+        }
+        if(left.getClass() != right.getClass()){
+            subtractOperation.setError(left.getClass().getSimpleName() + " Is not the same type as " + right.getClass().getSimpleName());
+        }
+
+        if (left.getClass() == ColorLiteral.class || right.getClass() == ColorLiteral.class) {
+            subtractOperation.setError("ColorLiteral is not allowed to be used in Calculation");
+        }
+    }
     private Literal getVariableExpression(Expression expression) {
         ArrayList node  = VariableReferences.get(expression);
         if (node == null){
@@ -157,6 +173,9 @@ public class Checker {
         }
         if(operation instanceof MultiplyOperation){
             checkMultiplyOperation((MultiplyOperation) operation);
+        }
+        if(operation instanceof SubtractOperation){
+            checkSubtractOperation((SubtractOperation) operation);
         }
     }
 
