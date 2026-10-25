@@ -2,10 +2,7 @@ package nl.han.ica.icss.checker;
 
 import nl.han.ica.datastructures.IHANLinkedList;
 import nl.han.ica.icss.ast.*;
-import nl.han.ica.icss.ast.literals.BoolLiteral;
-import nl.han.ica.icss.ast.literals.ColorLiteral;
-import nl.han.ica.icss.ast.literals.PixelLiteral;
-import nl.han.ica.icss.ast.literals.ScalarLiteral;
+import nl.han.ica.icss.ast.literals.*;
 import nl.han.ica.icss.ast.operations.AddOperation;
 import nl.han.ica.icss.ast.operations.MultiplyOperation;
 import nl.han.ica.icss.ast.operations.SubtractOperation;
@@ -159,7 +156,7 @@ public class Checker {
         }
     }
     private Literal getVariableExpression(Expression expression) {
-        ArrayList node  = VariableReferences.get(expression);
+        ArrayList<ASTNode> node  = VariableReferences.get(expression);
         if (node == null){
             expression.setError("Variable " + expression.getNodeLabel() + " has not been initialized or is not inside scope");
             return null;
@@ -207,14 +204,17 @@ public class Checker {
         if (literal == null) {
             return;
         }
-        if(Declaration.property.name.equalsIgnoreCase("width") && literal.getClass() != PixelLiteral.class) {
-            Declaration.setError("Property 'width' does not allow type of: " + literal.getClass().getSimpleName());
+
+        if ((Declaration.property.name.equalsIgnoreCase("width")
+                || Declaration.property.name.equalsIgnoreCase("height"))
+                && !(literal instanceof PixelLiteral || literal instanceof PercentageLiteral)) {
+            Declaration.setError("Property '" + Declaration.property.name + "' does not allow type of: " + literal.getClass().getSimpleName());
         }
-        if (Declaration.property.name.equalsIgnoreCase("background-color") && literal.getClass() != ColorLiteral.class) {
-            Declaration.setError("Property 'background-color' does not allow type of: " + literal.getClass().getSimpleName());
-        }
-        if (Declaration.property.name.equalsIgnoreCase("color") && literal.getClass() != ColorLiteral.class) {
-            Declaration.setError("Property 'color' does not allow type of: " + literal.getClass().getSimpleName());
+
+        if ((Declaration.property.name.equalsIgnoreCase("background-color")
+                || Declaration.property.name.equalsIgnoreCase("color"))
+                && literal.getClass() != ColorLiteral.class) {
+            Declaration.setError("Property '" + Declaration.property.name + "' does not allow type of: " + literal.getClass().getSimpleName());
         }
 
     }

@@ -31,4 +31,9 @@ public class BoolLiteral extends Literal {
     public int hashCode() {
         return Objects.hash(value);
     }
+
+    @Override
+    public String getValueAsString() {
+        return Boolean.toString(value);
+    }
 }
