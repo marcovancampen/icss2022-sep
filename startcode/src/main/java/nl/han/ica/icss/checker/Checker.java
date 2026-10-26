@@ -52,7 +52,7 @@ public class Checker {
                 Values.add(variableReference);
 
             }else{
-                Values.add((Literal) variableAssignment.expression);
+                Values.add((Expression) variableAssignment.expression);
             }
             Values.add(Parent);
             VariableReferences.put(variableAssignment.name, Values);
@@ -182,6 +182,22 @@ public class Checker {
             subtractOperation.setError("ColorLiteral is not allowed to be used in Calculation");
         }
     }
+
+
+    private Literal GetCalculationLiteral(Operation operation) {
+        if (operation.lhs instanceof Literal) {
+            return (Literal) operation.lhs;
+        }else if (operation.lhs instanceof VariableReference) {
+            getVariableExpression(operation.lhs);
+        }
+        if (operation.rhs instanceof Literal ){
+            return (Literal) operation.rhs;
+        }else  if (operation.rhs instanceof VariableReference) {
+            getVariableExpression(operation.rhs);
+        }
+        return null;
+
+    }
     private Literal getVariableExpression(Expression expression) {
         ArrayList<ASTNode> node  = VariableReferences.get(expression);
         if (node == null){
@@ -190,6 +206,9 @@ public class Checker {
         }
         if(node.get(0) instanceof VariableReference){
             return getVariableExpression((Expression) node.get(0));
+        }
+        if(node.get(0) instanceof Operation){
+            return GetCalculationLiteral((Operation) node.get(0));
         }
         return (Literal) node.get(0);
     }

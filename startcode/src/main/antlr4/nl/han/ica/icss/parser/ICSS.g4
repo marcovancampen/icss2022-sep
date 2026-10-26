@@ -99,7 +99,7 @@ elseBlock: ELSE OPEN_BRACE (declaration | ifStatement|variableAssignment)* CLOSE
 variableReference: CAPITAL_IDENT;
 
 
-variableAssignment: variableReference ASSIGNMENT_OPERATOR varValue SEMICOLON ;
+variableAssignment: variableReference ASSIGNMENT_OPERATOR (calculation|varValue) SEMICOLON;
 
 ifStatement: IF ifCondition ifElseBlock;
 
