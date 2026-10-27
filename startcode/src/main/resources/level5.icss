@@ -1,0 +1,11 @@
+ThemeColor := #336699;
+ContainerWidth := 80%;
+
+.container {
+	width: ContainerWidth - 10%;
+	color: ThemeColor;
+}
+
+aside {
+	height: 24px;
+}

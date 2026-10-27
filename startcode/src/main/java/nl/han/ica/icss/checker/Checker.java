@@ -243,6 +243,15 @@ public class Checker {
 
 
     private void checkDeclaration(Declaration Declaration) {
+        String propertyName = Declaration.property.name;
+        if (!propertyName.equals("color")
+                && !propertyName.equals("background-color")
+                && !propertyName.equals("width")
+                && !propertyName.equals("height")) {
+            Declaration.setError("Property '" + propertyName + "' is not supported");
+            return;
+        }
+
         checkExpressionReferences(Declaration.expression, Declaration);
         if(Declaration.expression instanceof Operation){
             checkOperation((Operation) Declaration.expression);
@@ -270,5 +279,4 @@ public class Checker {
 
 
 }
-
 

@@ -1,0 +1,25 @@
+GlobalWidth := 10px;
+Enabled := TRUE;
+
+p {
+  width: GlobalWidth + 2 * 5px;
+  color: #ff0000;
+  if [Enabled] {
+    height: 50%;
+    if [FALSE] {
+      background-color: #000000;
+    } else {
+      background-color: #ffffff;
+    }
+  } else {
+    width: 100px;
+  }
+}
+
+#menu {
+  height: 20px;
+}
+
+.active {
+  background-color: #abcdef;
+}

@@ -33,7 +33,7 @@ public class Generator {
 	}
 
 	private String declarationGenerator(Declaration declaration) {
-		String result = "\t";
+		String result = "  ";
 		result += declaration.property.name + ": ";
 		result += ((Literal)declaration.expression).getValueAsString() + ";" + "\n";
 		return result;

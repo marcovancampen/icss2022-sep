@@ -1,0 +1,17 @@
+BaseWidth := 100px;
+Padding := 5px;
+UseCompact := TRUE;
+
+.card {
+	width: BaseWidth + 2 * Padding;
+	height: 50%;
+	if[UseCompact] {
+		background-color: #112233;
+	} else {
+		background-color: #ffffff;
+	}
+}
+
+#footer {
+	width: 100px - 10px;
+}
