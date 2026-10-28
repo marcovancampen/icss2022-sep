@@ -30,4 +30,4 @@ public class HANStack<T> implements IHANStack<T> {
         }
         return list.get(list.size()-1);
     }
-}
+}   

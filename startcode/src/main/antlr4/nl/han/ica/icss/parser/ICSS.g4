@@ -80,8 +80,7 @@ propertyName: LOWER_IDENT;
 
 literals: PIXELSIZE #pixelLiteral
 | COLOR #colorLiteral
-| PERCENTAGE #percentageLiteral
-;
+| PERCENTAGE #percentageLiteral;
 
 
 property: propertyName COLON (value) SEMICOLON;

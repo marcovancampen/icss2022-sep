@@ -18,11 +18,14 @@ class CheckerRequirementsTest {
         assertSemanticError("p { width: 10px + 5%; }");
         assertSemanticError("p { height: 10px - 5%; }");
         assertSemanticError("p { width: 10px * 2px; }");
+        assertSemanticError("p { width: 2 + 2; }");
         assertSemanticError("p { color: #ff0000 + #000000; }");
         assertSemanticError("p { color: #ff0000 - #000000; }");
         assertSemanticError("p { color: #ff0000 * 2; }");
         assertSemanticSuccess("p { width: 2 * 10px; height: 20% * 3; }");
         assertSemanticSuccess("p { width: 10px * 2; }");
+        assertSemanticSuccess("Temp := 10; p { width: Temp * 5px; }");
+        assertSemanticSuccess("Temp := 2 + 3; p { width: Temp * 5px; }");
     }
 
     @Test

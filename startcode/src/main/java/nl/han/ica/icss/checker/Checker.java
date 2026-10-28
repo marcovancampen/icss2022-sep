@@ -157,15 +157,17 @@ public class Checker {
         }
     }
     private void checkMultiplyOperation(MultiplyOperation Multiplyoperation) {
-        for(ASTNode child : Multiplyoperation.getChildren()){
-            if (child instanceof ColorLiteral) {
-                Multiplyoperation.setError("ColorLiteral is not allowed to be used in Calculation");
-            }
-            if(child instanceof ScalarLiteral){
-                return;
-            }
+        Literal left = Multiplyoperation.lhs == null ? null : getLiteral(Multiplyoperation.lhs);
+        Literal right = Multiplyoperation.rhs == null ? null : getLiteral(Multiplyoperation.rhs);
+        if (left == null || right == null) {
+            return;
         }
-        Multiplyoperation.setError("Multiply operation does not contain a ScalarLiteral");
+        if (left instanceof ColorLiteral || right instanceof ColorLiteral) {
+            Multiplyoperation.setError("ColorLiteral is not allowed to be used in Calculation");
+        }
+        if (!(left instanceof ScalarLiteral) && !(right instanceof ScalarLiteral)) {
+            Multiplyoperation.setError("Multiply operation does not contain a ScalarLiteral");
+        }
     }
 
     private void checkSubtractOperation(SubtractOperation subtractOperation) {
@@ -184,20 +186,6 @@ public class Checker {
     }
 
 
-    private Literal GetCalculationLiteral(Operation operation) {
-        if (operation.lhs instanceof Literal) {
-            return (Literal) operation.lhs;
-        }else if (operation.lhs instanceof VariableReference) {
-            getVariableExpression(operation.lhs);
-        }
-        if (operation.rhs instanceof Literal ){
-            return (Literal) operation.rhs;
-        }else  if (operation.rhs instanceof VariableReference) {
-            getVariableExpression(operation.rhs);
-        }
-        return null;
-
-    }
     private Literal getVariableExpression(Expression expression) {
         ArrayList<ASTNode> node  = VariableReferences.get(expression);
         if (node == null){
@@ -208,7 +196,7 @@ public class Checker {
             return getVariableExpression((Expression) node.get(0));
         }
         if(node.get(0) instanceof Operation){
-            return GetCalculationLiteral((Operation) node.get(0));
+            return getLiteral((Operation) node.get(0));
         }
         return (Literal) node.get(0);
     }
@@ -227,13 +215,19 @@ public class Checker {
 
     private Literal getLiteral(Expression expression) {
         if(expression instanceof Operation){
-            checkOperation((Operation) expression);
-            for(ASTNode ex: expression.getChildren()){
-                if (!(ex instanceof ScalarLiteral)) {
-                    return getLiteral((Expression) ex);
+            Operation operation = (Operation) expression;
+            checkOperation(operation);
+            Literal left = operation.lhs == null ? null : getLiteral(operation.lhs);
+            Literal right = operation.rhs == null ? null : getLiteral(operation.rhs);
+            if (operation instanceof MultiplyOperation) {
+                if (left instanceof ScalarLiteral && !(right instanceof ScalarLiteral)) {
+                    return right;
                 }
-
+                if (right instanceof ScalarLiteral && !(left instanceof ScalarLiteral)) {
+                    return left;
+                }
             }
+            return left != null ? left : right;
         }
         if(expression instanceof VariableReference){
             return getVariableExpression((VariableReference) expression);
@@ -279,4 +273,3 @@ public class Checker {
 
 
 }
-
