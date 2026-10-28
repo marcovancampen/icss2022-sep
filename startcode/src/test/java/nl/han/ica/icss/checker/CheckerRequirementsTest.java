@@ -38,6 +38,17 @@ class CheckerRequirementsTest {
     }
 
     @Test
+    void allowsReassignmentUsingThePreviousVariableValue() {
+        Pipeline pipeline = parse("ParWidth := 500px; ParWidth := ParWidth + 2px; p { width: ParWidth; }");
+        assertTrue(pipeline.check(), pipeline.getErrors().toString());
+
+        pipeline.transform();
+
+        assertTrue(pipeline.isTransformed());
+        assertEquals("p {\n  width: 502px;\n}\n\n", pipeline.generate());
+    }
+
+    @Test
     void requiresBooleanIfConditions() {
         assertSemanticError("Condition := 10px; p { if [Condition] { width: 10px; } }");
         assertSemanticSuccess("Condition := TRUE; p { if [Condition] { width: 10px; } }");

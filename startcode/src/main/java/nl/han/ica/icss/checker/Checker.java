@@ -37,11 +37,15 @@ public class Checker {
     }
 
     private void checkVariableAssignment(VariableAssignment variableAssignment, ASTNode Parent) {
-        if(variableAssignment.expression == null){
+        if(variableAssignment.expression ==  null){
             variableAssignment.setError("VariableAssignment" + variableAssignment.getNodeLabel() + " has no value");
 
         }else{
             checkExpressionReferences(variableAssignment.expression, variableAssignment);
+            Literal value = getLiteral(variableAssignment.expression);
+            if (value == null) {
+                return;
+            }
             ArrayList<ASTNode> Values = new ArrayList<>();
             if(variableAssignment.expression instanceof VariableReference){
                 VariableReference variableReference = (VariableReference) variableAssignment.expression;
@@ -49,11 +53,8 @@ public class Checker {
                     variableAssignment.setError("A variable cannot refer to itself");
                     return;
                 }
-                Values.add(variableReference);
-
-            }else{
-                Values.add((Expression) variableAssignment.expression);
             }
+            Values.add(value);
             Values.add(Parent);
             VariableReferences.put(variableAssignment.name, Values);
         }
@@ -227,7 +228,7 @@ public class Checker {
                     return left;
                 }
             }
-            return left != null ? left : right;
+            return left != null && right != null ? left : null;
         }
         if(expression instanceof VariableReference){
             return getVariableExpression((VariableReference) expression);
