@@ -42,6 +42,49 @@ class TransformRequirementsTest {
         );
     }
 
+    @Test
+    void transformsSpecificationSection44ExampleWithTrueAndFalseConditions() {
+        String trueCase = "AdjustWidth := TRUE;\n" +
+                "WidthVar := 0px;\n" +
+                "\n" +
+                "p {\n" +
+                "\tif [AdjustWidth] {\n" +
+                "\t\tWidthVar := 200px;\n" +
+                "\t} else {\n" +
+                "\t\tWidthVar := 250px;\n" +
+                "\t}\n" +
+                "\n" +
+                "\twidth: WidthVar;\n" +
+                "}";
+
+        assertEquals(
+                "p {\n" +
+                        "  width: 200px;\n" +
+                        "}\n\n",
+                compile(trueCase)
+        );
+
+        String falseCase = "AdjustWidth := FALSE;\n" +
+                "WidthVar := 0px;\n" +
+                "\n" +
+                "p {\n" +
+                "\tif [AdjustWidth] {\n" +
+                "\t\tWidthVar := 200px;\n" +
+                "\t} else {\n" +
+                "\t\tWidthVar := 250px;\n" +
+                "\t}\n" +
+                "\n" +
+                "\twidth: WidthVar;\n" +
+                "}";
+
+        assertEquals(
+                "p {\n" +
+                        "  width: 250px;\n" +
+                        "}\n\n",
+                compile(falseCase)
+        );
+    }
+
     private String compile(String source) {
         Pipeline pipeline = new Pipeline();
         pipeline.parseString(source);

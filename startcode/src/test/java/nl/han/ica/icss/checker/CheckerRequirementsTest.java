@@ -22,6 +22,11 @@ class CheckerRequirementsTest {
         assertSemanticError("p { color: #ff0000 + #000000; }");
         assertSemanticError("p { color: #ff0000 - #000000; }");
         assertSemanticError("p { color: #ff0000 * 2; }");
+        assertSemanticError("p { width: 10px + 2; }");
+        assertSemanticError("p { width: 2 + 10px; }");
+        assertSemanticError("p { height: 50% - 5; }");
+        assertSemanticError("p { width: 10% * 10%; }");
+        assertSemanticSuccess("ScalarMult := 4 * 5; p { width: ScalarMult * 1px; }");
         assertSemanticSuccess("p { width: 2 * 10px; height: 20% * 3; }");
         assertSemanticSuccess("p { width: 10px * 2; }");
         assertSemanticSuccess("Temp := 10; p { width: Temp * 5px; }");
@@ -34,6 +39,12 @@ class CheckerRequirementsTest {
         assertSemanticError("p { color: 10px; }");
         assertSemanticError("p { width: 10; }");
         assertSemanticError("p { margin: 10px; }");
+        assertSemanticError("p { background-color: 20px; }");
+        assertSemanticError("p { background-color: 50%; }");
+        assertSemanticError("p { height: #ff0000; }");
+        assertSemanticError("p { height: 10; }");
+        assertSemanticError("Flag := TRUE; p { width: Flag; }");
+        assertSemanticError("Flag := FALSE; p { color: Flag; }");
         assertSemanticSuccess("p { color: #ff0000; background-color: #ffffff; width: 10px; height: 50%; }");
     }
 
@@ -61,6 +72,7 @@ class CheckerRequirementsTest {
         assertSemanticError("p { width: LocalWidth; LocalWidth := 10px; }");
         assertSemanticError("p { if [TRUE] { BranchWidth := 10px; } width: BranchWidth; }");
         assertSemanticError("p { if [TRUE] { BranchWidth := 10px; } else { width: BranchWidth; } }");
+        assertSemanticError("p { if [FALSE] {} else { ElseWidth := 10px; } width: ElseWidth; }");
         assertSemanticSuccess("GlobalWidth := 10px; p { LocalWidth := GlobalWidth; width: LocalWidth; }");
     }
 
